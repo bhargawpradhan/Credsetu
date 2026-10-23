@@ -48,7 +48,7 @@ export const LoginScreen: React.FC = () => {
 
   const handleSendOtp = async () => {
     setErrorMessage(null);
-    const cleanedPhone = phone.trim();
+    const cleanedPhone = phone.replace(/[\s\-\(\)\.]/g, '').trim();
 
     if (!cleanedPhone || cleanedPhone.length < 10) {
       setErrorMessage('Please enter a valid phone number (at least 10 digits)');
@@ -81,9 +81,10 @@ export const LoginScreen: React.FC = () => {
       return;
     }
 
+    const cleanedPhone = phone.replace(/[\s\-\(\)\.]/g, '').trim();
     setIsLoading(true);
     try {
-      const res = await verifyOtp(phone.trim(), otp.trim());
+      const res = await verifyOtp(cleanedPhone, otp.trim());
       if (!res.success) {
         setErrorMessage(res.message || 'Invalid or expired OTP');
       }

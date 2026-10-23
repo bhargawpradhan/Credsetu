@@ -12,9 +12,10 @@ export function validateBody(schema: ZodSchema) {
           field: e.path.join('.'),
           message: e.message,
         }));
+        const primaryMessage = error.errors[0]?.message || 'Validation failed';
         res.status(400).json({
           success: false,
-          message: 'Validation failed',
+          message: primaryMessage,
           errors: errorMessages,
         });
         return;

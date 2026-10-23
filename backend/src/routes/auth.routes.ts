@@ -9,21 +9,34 @@ import { requireAuth, AuthenticatedRequest } from '../middleware/auth';
 
 const router = Router();
 
+// Sanitizer for phone input: strips spaces, dashes, dots, brackets
+const cleanPhone = (val: unknown) => {
+  if (typeof val === 'string') {
+    return val.replace(/[\s\-\(\)\.]/g, '').trim();
+  }
+  return val;
+};
+
 // Validation Schemas
 const sendOtpSchema = z.object({
-  phone: z
-    .string()
-    .trim()
-    .min(10, 'Phone number must be at least 10 digits')
-    .max(15, 'Phone number cannot exceed 15 digits')
-    .regex(/^(\+?[0-9]{10,15})$/, 'Please enter a valid phone number (digits only, optional leading +)'),
+  phone: z.preprocess(
+    cleanPhone,
+    z
+      .string()
+      .min(10, 'Phone number must be at least 10 digits')
+      .max(16, 'Phone number cannot exceed 16 digits')
+      .regex(/^(\+?[0-9]{10,16})$/, 'Please enter a valid phone number (digits only, optional leading +)')
+  ),
 });
 
 const verifyOtpSchema = z.object({
-  phone: z
-    .string()
-    .trim()
-    .min(10, 'Phone number must be at least 10 digits'),
+  phone: z.preprocess(
+    cleanPhone,
+    z
+      .string()
+      .min(10, 'Phone number must be at least 10 digits')
+      .max(16, 'Phone number cannot exceed 16 digits')
+  ),
   otp: z
     .string()
     .trim()
@@ -43,7 +56,6 @@ router.post(
       const db = await getDb();
 
       // Generate a 6-digit OTP
-      // For predictable testing or standard flow:
       const generatedOtp = process.env.NODE_ENV === 'test' 
         ? '123456' 
         : Math.floor(100000 + Math.random() * 900000).toString();
@@ -72,7 +84,6 @@ router.post(
       res.status(200).json({
         success: true,
         message: 'OTP sent successfully. Check your server console for the mock OTP.',
-        // We also provide mockOtp in the response during development for convenience
         mockOtp: config.nodeEnv !== 'production' ? generatedOtp : undefined,
       });
     } catch (error: any) {
@@ -97,9 +108,7 @@ router.post(
       const { phone, otp } = req.body;
       const db = await getDb();
 
-      // Universal mock OTP '123456' accepted in development/testing, or check DB
       const isMasterDevOtp = (config.nodeEnv !== 'production' || process.env.NODE_ENV === 'test') && otp === '123456';
-
       let otpValid = isMasterDevOtp;
 
       if (!otpValid) {
@@ -110,7 +119,6 @@ router.post(
 
         if (otpRecord.rows.length > 0) {
           otpValid = true;
-          // Consume OTP
           await db.query('DELETE FROM otps WHERE phone = $1', [phone]);
         }
       }
