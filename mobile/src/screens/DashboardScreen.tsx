@@ -17,6 +17,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import { api, getApiBaseUrl } from '../services/api';
 import { CreateLoanPayload, Loan, LoanFilterStatus, LoanSummary } from '../types';
+import { THEME } from '../theme/colors';
+import { ThreeDBackground } from '../components/ThreeDBackground';
 import { SummaryCard } from '../components/SummaryCard';
 import { StatusFilterTabs } from '../components/StatusFilterTabs';
 import { LoanCard } from '../components/LoanCard';
@@ -37,12 +39,10 @@ export const DashboardScreen: React.FC = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [previewReceiptUrl, setPreviewReceiptUrl] = useState<string | null>(null);
 
-  // Load API base URL
   useEffect(() => {
     getApiBaseUrl().then(setApiBaseUrl);
   }, []);
 
-  // Fetch summary and loans
   const fetchData = useCallback(async () => {
     try {
       const [summaryRes, loansRes] = await Promise.all([
@@ -77,7 +77,6 @@ export const DashboardScreen: React.FC = () => {
     try {
       const res = await api.markLoanAsRepaid(loan.id);
       if (res.success) {
-        // Refresh data to update summary and lists
         fetchData();
       } else {
         Alert.alert('Error', res.message || 'Could not mark loan as repaid.');
@@ -127,172 +126,179 @@ export const DashboardScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="light" />
+    <ThreeDBackground>
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style="light" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <View style={styles.headerLogo}>
-            <Ionicons name="wallet" size={20} color="#FFFFFF" />
+        {/* 3D Glass Header Bar */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <View style={styles.headerLogo}>
+              <Ionicons name="wallet-outline" size={20} color={THEME.marigold.bright} />
+            </View>
+            <View>
+              <Text style={styles.headerTitle}>MiniLedger</Text>
+              <Text style={styles.headerSubtitle}>{user?.phone || 'My Ledger'}</Text>
+            </View>
           </View>
-          <View>
-            <Text style={styles.headerTitle}>MiniLedger</Text>
-            <Text style={styles.headerSubtitle}>{user?.phone || 'My Ledger'}</Text>
+
+          <View style={styles.headerRight}>
+            <TouchableOpacity onPress={onRefresh} style={styles.iconBtn} activeOpacity={0.75}>
+              <Ionicons name="refresh" size={18} color={THEME.iceSilver.main} />
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={logout} style={styles.iconBtn} activeOpacity={0.75}>
+              <Ionicons name="log-out-outline" size={18} color={THEME.marigold.bright} />
+            </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.headerRight}>
-          <TouchableOpacity onPress={onRefresh} style={styles.iconBtn} activeOpacity={0.7}>
-            <Ionicons name="refresh" size={20} color="#94A3B8" />
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={logout} style={styles.iconBtn} activeOpacity={0.7}>
-            <Ionicons name="log-out-outline" size={20} color="#F87171" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Main List with Sticky/Fixed top Summary Card */}
-      <FlatList
-        data={loans}
-        keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor="#4F46E5" />
-        }
-        ListHeaderComponent={
-          <View>
-            {/* Summary Card at the top */}
-            <SummaryCard summary={summary} isLoading={isLoading} />
-
-            {/* Status Filter Tabs */}
-            <StatusFilterTabs
-              selectedStatus={selectedStatus}
-              onSelectStatus={setSelectedStatus}
-              summary={summary}
+        {/* Main List */}
+        <FlatList
+          data={loans}
+          keyExtractor={(item) => item.id}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={onRefresh}
+              tintColor={THEME.marigold.bright}
             />
+          }
+          ListHeaderComponent={
+            <View>
+              {/* Summary Card */}
+              <SummaryCard summary={summary} isLoading={isLoading} />
 
-            {/* Search Bar */}
-            <View style={styles.searchContainer}>
-              <Ionicons name="search" size={16} color="#94A3B8" />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search by friend name..."
-                placeholderTextColor="#94A3B8"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
+              {/* Status Filter Tabs */}
+              <StatusFilterTabs
+                selectedStatus={selectedStatus}
+                onSelectStatus={setSelectedStatus}
+                summary={summary}
               />
-              {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={() => setSearchQuery('')}>
-                  <Ionicons name="close-circle" size={16} color="#94A3B8" />
-                </TouchableOpacity>
-              )}
-            </View>
 
-            {/* Section Header */}
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>
-                {selectedStatus === 'all'
-                  ? 'All Transactions'
-                  : selectedStatus === 'active'
-                  ? 'Active Loans'
-                  : selectedStatus === 'overdue'
-                  ? 'Overdue Loans'
-                  : 'Repaid Loans'}
-              </Text>
-              <Text style={styles.sectionCount}>
-                {loans.length} item{loans.length === 1 ? '' : 's'}
-              </Text>
-            </View>
-          </View>
-        }
-        renderItem={({ item }) => (
-          <LoanCard
-            loan={item}
-            onMarkRepaid={handleMarkRepaid}
-            onDelete={handleDeleteLoan}
-            onViewReceipt={(url) => setPreviewReceiptUrl(url)}
-            apiBaseUrl={apiBaseUrl}
-          />
-        )}
-        ListEmptyComponent={
-          isLoading ? (
-            <View style={styles.emptyContainer}>
-              <ActivityIndicator size="large" color="#4F46E5" />
-              <Text style={styles.emptyText}>Loading loans...</Text>
-            </View>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconCircle}>
-                <Ionicons
-                  name={
-                    selectedStatus === 'overdue'
-                      ? 'happy-outline'
-                      : selectedStatus === 'repaid'
-                      ? 'wallet-outline'
-                      : 'document-text-outline'
-                  }
-                  size={36}
-                  color="#94A3B8"
+              {/* Search Bar in 3D Glass */}
+              <View style={styles.searchContainer}>
+                <Ionicons name="search" size={16} color={THEME.marigold.bright} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search by friend name..."
+                  placeholderTextColor={THEME.iceSilver.dark}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
                 />
+                {searchQuery.length > 0 && (
+                  <TouchableOpacity onPress={() => setSearchQuery('')}>
+                    <Ionicons name="close-circle" size={16} color={THEME.iceSilver.muted} />
+                  </TouchableOpacity>
+                )}
               </View>
-              <Text style={styles.emptyTitle}>
-                {selectedStatus === 'overdue'
-                  ? 'No Overdue Loans!'
-                  : selectedStatus === 'repaid'
-                  ? 'No Repaid Loans Yet'
-                  : 'No Loan Entries Found'}
-              </Text>
-              <Text style={styles.emptyText}>
-                {selectedStatus === 'overdue'
-                  ? 'All loans are on schedule or already settled.'
-                  : 'Tap the button below to add your first loan entry.'}
-              </Text>
+
+              {/* Section Header */}
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>
+                  {selectedStatus === 'all'
+                    ? 'All Transactions'
+                    : selectedStatus === 'active'
+                    ? 'Active Loans'
+                    : selectedStatus === 'overdue'
+                    ? 'Overdue Loans'
+                    : 'Repaid Loans'}
+                </Text>
+                <Text style={styles.sectionCount}>
+                  {loans.length} item{loans.length === 1 ? '' : 's'}
+                </Text>
+              </View>
             </View>
-          )
-        }
-        contentContainerStyle={styles.listContent}
-      />
+          }
+          renderItem={({ item }) => (
+            <LoanCard
+              loan={item}
+              onMarkRepaid={handleMarkRepaid}
+              onDelete={handleDeleteLoan}
+              onViewReceipt={(url) => setPreviewReceiptUrl(url)}
+              apiBaseUrl={apiBaseUrl}
+            />
+          )}
+          ListEmptyComponent={
+            isLoading ? (
+              <View style={styles.emptyContainer}>
+                <ActivityIndicator size="large" color={THEME.marigold.bright} />
+                <Text style={styles.emptyText}>Loading ledger transactions...</Text>
+              </View>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <View style={styles.emptyIconCircle}>
+                  <Ionicons
+                    name={
+                      selectedStatus === 'overdue'
+                        ? 'checkmark-done-circle-outline'
+                        : selectedStatus === 'repaid'
+                        ? 'wallet-outline'
+                        : 'document-text-outline'
+                    }
+                    size={38}
+                    color={THEME.marigold.bright}
+                  />
+                </View>
+                <Text style={styles.emptyTitle}>
+                  {selectedStatus === 'overdue'
+                    ? 'No Overdue Loans!'
+                    : selectedStatus === 'repaid'
+                    ? 'No Settled Loans Yet'
+                    : 'No Transactions Found'}
+                </Text>
+                <Text style={styles.emptyText}>
+                  {selectedStatus === 'overdue'
+                    ? 'All loans are on schedule or already fully repaid.'
+                    : 'Tap the 3D button below to track your first loan entry.'}
+                </Text>
+              </View>
+            )
+          }
+          contentContainerStyle={styles.listContent}
+        />
 
-      {/* Floating Action Button: Add Loan */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setIsAddModalVisible(true)}
-        activeOpacity={0.85}
-      >
-        <Ionicons name="add" size={28} color="#FFFFFF" />
-        <Text style={styles.fabText}>Add Loan</Text>
-      </TouchableOpacity>
+        {/* 3D Floating Action Button: Add Loan */}
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => setIsAddModalVisible(true)}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="add" size={26} color={THEME.aubergine.darkest} />
+          <Text style={styles.fabText}>Add Loan</Text>
+        </TouchableOpacity>
 
-      {/* Add Loan Modal */}
-      <AddLoanModal
-        visible={isAddModalVisible}
-        onClose={() => setIsAddModalVisible(false)}
-        onSubmit={handleCreateLoan}
-      />
+        {/* Add Loan Modal */}
+        <AddLoanModal
+          visible={isAddModalVisible}
+          onClose={() => setIsAddModalVisible(false)}
+          onSubmit={handleCreateLoan}
+        />
 
-      {/* Receipt Photo Modal */}
-      <ReceiptModal
-        visible={Boolean(previewReceiptUrl)}
-        imageUrl={previewReceiptUrl}
-        onClose={() => setPreviewReceiptUrl(null)}
-      />
-    </SafeAreaView>
+        {/* Receipt Modal */}
+        <ReceiptModal
+          visible={Boolean(previewReceiptUrl)}
+          imageUrl={previewReceiptUrl}
+          onClose={() => setPreviewReceiptUrl(null)}
+        />
+      </SafeAreaView>
+    </ThreeDBackground>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
     paddingTop: Platform.OS === 'android' ? 24 : 0,
   },
   header: {
-    backgroundColor: '#0F172A',
+    backgroundColor: 'rgba(19, 6, 28, 0.65)', // Transparent frosted header
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(226, 232, 240, 0.12)',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 14,
   },
   headerLeft: {
@@ -301,121 +307,138 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   headerLogo: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    backgroundColor: '#4F46E5',
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderWidth: 1.5,
+    borderColor: THEME.marigold.bright,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: THEME.marigold.bright,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.3,
+    fontSize: 19,
+    fontWeight: '900',
+    color: THEME.iceSilver.pure,
+    letterSpacing: -0.4,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '500',
+    color: THEME.marigold.light,
+    fontWeight: '600',
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
   iconBtn: {
-    padding: 8,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    padding: 9,
+    borderRadius: 12,
+    backgroundColor: 'rgba(226, 232, 240, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(226, 232, 240, 0.18)',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'rgba(30, 11, 43, 0.45)', // Transparent glass search
     marginHorizontal: 16,
     marginBottom: 16,
-    paddingHorizontal: 12,
-    height: 42,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    gap: 8,
+    paddingHorizontal: 14,
+    height: 46,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(226, 232, 240, 0.18)',
+    gap: 10,
   },
   searchInput: {
     flex: 1,
-    fontSize: 13,
-    color: '#0F172A',
+    fontSize: 14,
+    color: THEME.iceSilver.pure,
+    fontWeight: '600',
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginHorizontal: 16,
-    marginBottom: 10,
+    marginHorizontal: 20,
+    marginBottom: 12,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#334155',
+    fontSize: 13,
+    fontWeight: '800',
+    color: THEME.iceSilver.muted,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   sectionCount: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#94A3B8',
+    fontWeight: '700',
+    color: THEME.marigold.bright,
   },
   listContent: {
-    paddingBottom: 90,
+    paddingBottom: 96,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 48,
+    paddingVertical: 56,
     paddingHorizontal: 32,
+    backgroundColor: 'rgba(30, 11, 43, 0.35)',
+    marginHorizontal: 16,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: 'rgba(226, 232, 240, 0.12)',
   },
   emptyIconCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#F1F5F9',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#334155',
-    marginBottom: 4,
+    fontSize: 18,
+    fontWeight: '900',
+    color: THEME.iceSilver.pure,
+    marginBottom: 6,
   },
   emptyText: {
     fontSize: 13,
-    color: '#94A3B8',
+    color: THEME.iceSilver.muted,
     textAlign: 'center',
     lineHeight: 18,
   },
   fab: {
     position: 'absolute',
-    bottom: 24,
-    right: 20,
-    backgroundColor: '#4F46E5',
+    bottom: 26,
+    right: 22,
+    backgroundColor: THEME.marigold.bright, // Vivid Marigold 3D Orb
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 28,
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 8,
+    paddingHorizontal: 22,
+    borderRadius: 30,
+    shadowColor: THEME.marigold.bright,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.55,
+    shadowRadius: 18,
+    elevation: 10,
   },
   fabText: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '900',
+    color: THEME.aubergine.darkest,
+    letterSpacing: 0.4,
   },
 });

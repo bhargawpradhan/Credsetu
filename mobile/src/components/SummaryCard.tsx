@@ -2,6 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LoanSummary } from '../types';
+import { THEME } from '../theme/colors';
+import { ThreeDTiltCard } from './ThreeDTiltCard';
 
 interface SummaryCardProps {
   summary: LoanSummary | null;
@@ -17,187 +19,266 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({ summary, isLoading }) 
   const totalLent = summary?.totalLent ?? 0;
   const totalRepaid = summary?.totalRepaid ?? 0;
   const overdueAmount = summary?.overdueAmount ?? 0;
-  const totalPending = summary?.totalPending ?? (totalLent - totalRepaid);
+  const totalPending = summary?.totalPending ?? Math.max(0, totalLent - totalRepaid);
 
   return (
-    <View style={styles.container}>
-      {/* Top Banner: Total Lent & Outstanding */}
-      <View style={styles.heroSection}>
-        <View>
-          <Text style={styles.heroSubtitle}>Total Money Lent</Text>
-          <Text style={styles.heroAmount}>{formatCurrency(totalLent)}</Text>
-        </View>
-        <View style={styles.outstandingBadge}>
-          <Text style={styles.outstandingLabel}>Pending Balance</Text>
-          <Text style={styles.outstandingAmount}>{formatCurrency(totalPending)}</Text>
-        </View>
-      </View>
+    <View style={styles.outerWrapper}>
+      <ThreeDTiltCard
+        maxTilt={10}
+        glowColor={overdueAmount > 0 ? THEME.marigold.glowStrong : THEME.iceSilver.glow}
+        style={styles.tiltCard}
+      >
+        {/* Holographic Specular Line at Top */}
+        <View style={styles.specularLine} />
 
-      {/* Grid of Stats */}
-      <View style={styles.gridContainer}>
-        {/* Total Repaid Card */}
-        <View style={[styles.statCard, styles.repaidCard]}>
-          <View style={styles.cardHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="checkmark-done" size={16} color="#2E7D32" />
+        {/* Hero Section */}
+        <View style={styles.heroSection}>
+          <View>
+            <View style={styles.badgeRow}>
+              <View style={styles.marigoldPulseDot} />
+              <Text style={styles.heroLabel}>Total Money Lent</Text>
             </View>
-            <Text style={styles.statLabel}>Total Repaid</Text>
+            <Text style={styles.heroAmount}>{formatCurrency(totalLent)}</Text>
           </View>
-          <Text style={[styles.statValue, { color: '#2E7D32' }]}>
-            {formatCurrency(totalRepaid)}
-          </Text>
-          <Text style={styles.statSubText}>
-            {summary?.counts.repaid || 0} loan{summary?.counts.repaid === 1 ? '' : 's'} settled
-          </Text>
+
+          {/* Pending Balance 3D Floating Chip */}
+          <View style={styles.pendingChip}>
+            <Text style={styles.pendingLabel}>Pending Balance</Text>
+            <Text style={styles.pendingAmount}>{formatCurrency(totalPending)}</Text>
+          </View>
         </View>
 
-        {/* Overdue Amount Card - PROMINENT HIGHLIGHT */}
-        <View
-          style={[
-            styles.statCard,
-            styles.overdueCard,
-            overdueAmount > 0 ? styles.overdueActiveBorder : null,
-          ]}
-        >
-          <View style={styles.cardHeader}>
-            <View
-              style={[
-                styles.iconCircle,
-                { backgroundColor: overdueAmount > 0 ? '#FFEBEE' : '#F5F5F5' },
-              ]}
-            >
-              <Ionicons
-                name="alert-circle"
-                size={16}
-                color={overdueAmount > 0 ? '#D32F2F' : '#757575'}
-              />
+        {/* 3D Glass Stat Pods */}
+        <View style={styles.gridContainer}>
+          {/* Total Repaid Pod */}
+          <View style={[styles.statPod, styles.repaidPod]}>
+            <View style={styles.podHeader}>
+              <View style={styles.repaidIconGlow}>
+                <Ionicons name="checkmark-done" size={14} color={THEME.repaid.light} />
+              </View>
+              <Text style={styles.podLabel}>Total Repaid</Text>
             </View>
-            <Text style={[styles.statLabel, overdueAmount > 0 ? { color: '#B71C1C' } : null]}>
-              Overdue Amount
+            <Text style={styles.repaidValue}>{formatCurrency(totalRepaid)}</Text>
+            <Text style={styles.podSubText}>
+              {summary?.counts.repaid || 0} loan{summary?.counts.repaid === 1 ? '' : 's'} settled
             </Text>
           </View>
-          <Text
+
+          {/* Overdue Amount Pod - VIVID 3D MARIGOLD & CRIMSON */}
+          <View
             style={[
-              styles.statValue,
-              { color: overdueAmount > 0 ? '#D32F2F' : '#616161' },
+              styles.statPod,
+              styles.overduePod,
+              overdueAmount > 0 && styles.overdueActivePod,
             ]}
           >
-            {formatCurrency(overdueAmount)}
-          </Text>
-          <Text style={[styles.statSubText, overdueAmount > 0 ? { color: '#C62828' } : null]}>
-            {summary?.counts.overdue || 0} overdue loan{summary?.counts.overdue === 1 ? '' : 's'}
-          </Text>
+            <View style={styles.podHeader}>
+              <View
+                style={[
+                  styles.overdueIconGlow,
+                  overdueAmount > 0 && styles.overdueIconGlowActive,
+                ]}
+              >
+                <Ionicons
+                  name={overdueAmount > 0 ? 'flame' : 'shield-checkmark-outline'}
+                  size={14}
+                  color={overdueAmount > 0 ? THEME.marigold.bright : THEME.iceSilver.muted}
+                />
+              </View>
+              <Text
+                style={[
+                  styles.podLabel,
+                  overdueAmount > 0 && { color: THEME.marigold.light, fontWeight: '800' },
+                ]}
+              >
+                Overdue Amount
+              </Text>
+            </View>
+            <Text
+              style={[
+                styles.overdueValue,
+                overdueAmount > 0 && styles.overdueValueActive,
+              ]}
+            >
+              {formatCurrency(overdueAmount)}
+            </Text>
+            <Text
+              style={[
+                styles.podSubText,
+                overdueAmount > 0 && { color: THEME.marigold.bright, fontWeight: '700' },
+              ]}
+            >
+              {summary?.counts.overdue || 0} overdue loan{summary?.counts.overdue === 1 ? '' : 's'}
+            </Text>
+          </View>
         </View>
-      </View>
+      </ThreeDTiltCard>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#1E293B', // Rich dark navy
-    borderRadius: 20,
-    padding: 18,
+  outerWrapper: {
     marginHorizontal: 16,
-    marginTop: 12,
+    marginTop: 14,
     marginBottom: 16,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 6,
+  },
+  tiltCard: {
+    padding: 20,
+    backgroundColor: 'rgba(30, 11, 43, 0.45)', // Completely transparent Deep Aubergine
+    borderColor: 'rgba(226, 232, 240, 0.22)',
+  },
+  specularLine: {
+    position: 'absolute',
+    top: 0,
+    left: '10%',
+    right: '10%',
+    height: 1.5,
+    backgroundColor: 'rgba(226, 232, 240, 0.65)',
+    shadowColor: '#FFFFFF',
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
   },
   heroSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 14,
+    alignItems: 'flex-start',
+    marginBottom: 20,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255, 255, 255, 0.12)',
+    borderBottomColor: 'rgba(226, 232, 240, 0.12)',
   },
-  heroSubtitle: {
+  badgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  marigoldPulseDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: THEME.marigold.bright,
+    shadowColor: THEME.marigold.bright,
+    shadowOpacity: 0.9,
+    shadowRadius: 6,
+  },
+  heroLabel: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#94A3B8',
+    fontWeight: '700',
+    color: THEME.iceSilver.muted,
     textTransform: 'uppercase',
-    letterSpacing: 0.8,
+    letterSpacing: 1.2,
   },
   heroAmount: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    marginTop: 4,
-    letterSpacing: -0.5,
+    fontSize: 32,
+    fontWeight: '900',
+    color: THEME.iceSilver.pure,
+    letterSpacing: -0.8,
+    marginTop: 2,
+    textShadowColor: 'rgba(245, 158, 11, 0.35)',
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 16,
   },
-  outstandingBadge: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 12,
+  pendingChip: {
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 14,
     alignItems: 'flex-end',
   },
-  outstandingLabel: {
-    fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '500',
-  },
-  outstandingAmount: {
-    fontSize: 15,
+  pendingLabel: {
+    fontSize: 10,
     fontWeight: '700',
-    color: '#38BDF8', // Light blue accent
+    color: THEME.marigold.light,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  pendingAmount: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: THEME.marigold.bright,
     marginTop: 2,
   },
   gridContainer: {
     flexDirection: 'row',
     gap: 12,
   },
-  statCard: {
+  statPod: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 12,
+    backgroundColor: 'rgba(19, 6, 28, 0.55)', // Translucent glass pod
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(226, 232, 240, 0.12)',
   },
-  repaidCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#2E7D32',
+  repaidPod: {
+    borderLeftWidth: 3.5,
+    borderLeftColor: THEME.repaid.main,
   },
-  overdueCard: {
-    borderLeftWidth: 4,
-    borderLeftColor: '#94A3B8',
-    backgroundColor: '#FFFFFF',
+  overduePod: {
+    borderLeftWidth: 3.5,
+    borderLeftColor: THEME.iceSilver.muted,
   },
-  overdueActiveBorder: {
-    borderLeftColor: '#D32F2F',
-    backgroundColor: '#FFF5F5',
+  overdueActivePod: {
+    borderLeftColor: THEME.marigold.bright,
+    borderColor: 'rgba(245, 158, 11, 0.35)',
+    backgroundColor: 'rgba(48, 14, 25, 0.55)',
   },
-  cardHeader: {
+  podHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     marginBottom: 6,
   },
-  iconCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  repaidIconGlow: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  statLabel: {
+  overdueIconGlow: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(226, 232, 240, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  overdueIconGlowActive: {
+    backgroundColor: 'rgba(245, 158, 11, 0.25)',
+  },
+  podLabel: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#475569',
+    fontWeight: '700',
+    color: THEME.iceSilver.muted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  statValue: {
-    fontSize: 17,
-    fontWeight: '800',
-    marginTop: 2,
+  repaidValue: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: THEME.repaid.light,
   },
-  statSubText: {
+  overdueValue: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: THEME.iceSilver.metallic,
+  },
+  overdueValueActive: {
+    color: THEME.marigold.bright,
+    textShadowColor: 'rgba(245, 158, 11, 0.5)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 8,
+  },
+  podSubText: {
     fontSize: 10,
-    fontWeight: '500',
-    color: '#64748B',
+    fontWeight: '600',
+    color: THEME.iceSilver.dark,
     marginTop: 4,
   },
 });

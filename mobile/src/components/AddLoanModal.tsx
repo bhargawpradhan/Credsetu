@@ -15,6 +15,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { CreateLoanPayload } from '../types';
+import { THEME } from '../theme/colors';
 
 interface AddLoanModalProps {
   visible: boolean;
@@ -26,7 +27,6 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
   const [friendName, setFriendName] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState(() => {
-    // Default to 7 days from now
     const d = new Date();
     d.setDate(d.getDate() + 7);
     return d.toISOString().split('T')[0];
@@ -36,7 +36,6 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Helper to set preset dates
   const setPresetDate = (daysAhead: number) => {
     const d = new Date();
     d.setDate(d.getDate() + daysAhead);
@@ -45,13 +44,9 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
 
   const handlePickImage = async () => {
     try {
-      // Request permission
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!perm.granted) {
-        Alert.alert(
-          'Permission Required',
-          'Please grant access to your photo library to attach a receipt.'
-        );
+        Alert.alert('Permission Required', 'Please grant access to your photo library to attach a receipt.');
         return;
       }
 
@@ -90,14 +85,13 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
       }
     } catch (e: any) {
       console.error('Camera error:', e);
-      Alert.alert('Error', 'Camera unavailable on this device or simulator.');
+      Alert.alert('Error', 'Camera unavailable on this device or browser.');
     }
   };
 
   const handleSubmit = async () => {
     setErrorMessage(null);
 
-    // Validation
     if (!friendName.trim()) {
       setErrorMessage('Please enter the friend’s name.');
       return;
@@ -125,7 +119,6 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
       });
 
       if (res.success) {
-        // Reset form
         setFriendName('');
         setAmount('');
         setNotes('');
@@ -149,16 +142,16 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
           <View style={styles.header}>
             <View>
               <Text style={styles.title}>New Loan Entry</Text>
-              <Text style={styles.subtitle}>Track money you lent to a friend</Text>
+              <Text style={styles.subtitle}>Track money lent in 3D precision</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-              <Ionicons name="close" size={22} color="#64748B" />
+              <Ionicons name="close" size={20} color={THEME.iceSilver.main} />
             </TouchableOpacity>
           </View>
 
           {errorMessage && (
             <View style={styles.errorBox}>
-              <Ionicons name="alert-circle" size={16} color="#DC2626" />
+              <Ionicons name="alert-circle" size={16} color={THEME.marigold.bright} />
               <Text style={styles.errorText}>{errorMessage}</Text>
             </View>
           )}
@@ -168,11 +161,11 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Friend's Name *</Text>
               <View style={styles.inputWrapper}>
-                <Ionicons name="person-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+                <Ionicons name="person-outline" size={18} color={THEME.marigold.bright} style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="e.g. Rahul Sharma"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={THEME.iceSilver.dark}
                   value={friendName}
                   onChangeText={setFriendName}
                 />
@@ -187,7 +180,7 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
                 <TextInput
                   style={[styles.textInput, styles.amountInput]}
                   placeholder="0.00"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={THEME.iceSilver.dark}
                   keyboardType="numeric"
                   value={amount}
                   onChangeText={setAmount}
@@ -199,25 +192,26 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Due Date (YYYY-MM-DD) *</Text>
               <View style={styles.inputWrapper}>
-                <Ionicons name="calendar-outline" size={18} color="#94A3B8" style={styles.inputIcon} />
+                <Ionicons name="calendar-outline" size={18} color={THEME.marigold.bright} style={styles.inputIcon} />
                 <TextInput
                   style={styles.textInput}
                   placeholder="YYYY-MM-DD"
-                  placeholderTextColor="#94A3B8"
+                  placeholderTextColor={THEME.iceSilver.dark}
                   value={dueDate}
                   onChangeText={setDueDate}
                 />
               </View>
 
-              {/* Quick Presets */}
+              {/* Quick 3D Presets */}
               <View style={styles.presetRow}>
                 <TouchableOpacity
-                  style={[styles.presetChip, dueDate === new Date().toISOString().split('T')[0] && styles.presetChipActive]}
+                  style={[
+                    styles.presetChip,
+                    dueDate === new Date().toISOString().split('T')[0] && styles.presetChipActive,
+                  ]}
                   onPress={() => setPresetDate(0)}
                 >
-                  <Text style={[styles.presetText, dueDate === new Date().toISOString().split('T')[0] && styles.presetTextActive]}>
-                    Today
-                  </Text>
+                  <Text style={styles.presetText}>Today</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.presetChip} onPress={() => setPresetDate(1)}>
@@ -232,8 +226,14 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
                   <Text style={styles.presetText}>+1 Month</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.presetChip, styles.presetChipPast]} onPress={() => setPresetDate(-3)}>
-                  <Text style={[styles.presetText, styles.presetTextPast]}>Past (Overdue Test)</Text>
+                <TouchableOpacity
+                  style={[styles.presetChip, styles.presetChipPast]}
+                  onPress={() => setPresetDate(-3)}
+                >
+                  <Ionicons name="flame" size={12} color={THEME.marigold.bright} />
+                  <Text style={[styles.presetText, { color: THEME.marigold.bright }]}>
+                    Past (Overdue Test)
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -244,8 +244,8 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
               <View style={[styles.inputWrapper, { height: 70, alignItems: 'flex-start' }]}>
                 <TextInput
                   style={[styles.textInput, { height: 60, textAlignVertical: 'top', paddingTop: 8 }]}
-                  placeholder="e.g. Dinner split, movie tickets"
-                  placeholderTextColor="#94A3B8"
+                  placeholder="e.g. Dinner split, concert tickets"
+                  placeholderTextColor={THEME.iceSilver.dark}
                   multiline
                   value={notes}
                   onChangeText={setNotes}
@@ -255,7 +255,7 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
 
             {/* Bonus: Receipt Photo Upload */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Receipt Photo (Optional Bonus)</Text>
+              <Text style={styles.label}>Receipt Photo (Bonus)</Text>
 
               {receiptUri ? (
                 <View style={styles.imagePreviewContainer}>
@@ -274,7 +274,7 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
                     onPress={handlePickImage}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="images-outline" size={18} color="#0284C7" />
+                    <Ionicons name="images-outline" size={18} color={THEME.marigold.bright} />
                     <Text style={styles.photoPickerText}>Choose Photo</Text>
                   </TouchableOpacity>
 
@@ -284,7 +284,7 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
                       onPress={handleTakePhoto}
                       activeOpacity={0.7}
                     >
-                      <Ionicons name="camera-outline" size={18} color="#0284C7" />
+                      <Ionicons name="camera-outline" size={18} color={THEME.marigold.bright} />
                       <Text style={styles.photoPickerText}>Take Photo</Text>
                     </TouchableOpacity>
                   )}
@@ -300,11 +300,11 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
               activeOpacity={0.8}
             >
               {isSubmitting ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color={THEME.aubergine.darkest} />
               ) : (
                 <>
-                  <Ionicons name="add-circle-outline" size={20} color="#FFFFFF" />
-                  <Text style={styles.submitButtonText}>Add Loan Entry</Text>
+                  <Ionicons name="add-circle" size={20} color={THEME.aubergine.darkest} />
+                  <Text style={styles.submitButtonText}>Create Loan Entry</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -318,52 +318,57 @@ export const AddLoanModal: React.FC<AddLoanModalProps> = ({ visible, onClose, on
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    backgroundColor: 'rgba(10, 3, 16, 0.8)',
     justifyContent: 'flex-end',
   },
   modalCard: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
+    backgroundColor: 'rgba(30, 11, 43, 0.95)', // Deep Aubergine Frost
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 1.5,
+    borderColor: 'rgba(226, 232, 240, 0.25)',
+    paddingHorizontal: 22,
+    paddingTop: 22,
+    paddingBottom: Platform.OS === 'ios' ? 38 : 26,
     maxHeight: '90%',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 18,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#0F172A',
+    fontSize: 22,
+    fontWeight: '900',
+    color: THEME.iceSilver.pure,
+    letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 12,
-    color: '#64748B',
+    color: THEME.iceSilver.muted,
     marginTop: 2,
   },
   closeBtn: {
-    padding: 6,
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
+    padding: 8,
+    borderRadius: 14,
+    backgroundColor: 'rgba(226, 232, 240, 0.1)',
   },
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#FEE2E2',
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 14,
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
+    borderWidth: 1,
+    borderColor: THEME.marigold.bright,
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
   },
   errorText: {
     fontSize: 12,
-    color: '#DC2626',
-    fontWeight: '600',
+    color: THEME.marigold.light,
+    fontWeight: '700',
     flex: 1,
   },
   scroll: {
@@ -373,73 +378,75 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#334155',
-    marginBottom: 6,
+    fontSize: 11,
+    fontWeight: '800',
+    color: THEME.iceSilver.metallic,
+    marginBottom: 8,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    backgroundColor: '#F8FAFC',
-    paddingHorizontal: 12,
-    height: 48,
+    borderColor: 'rgba(226, 232, 240, 0.18)',
+    borderRadius: 14,
+    backgroundColor: 'rgba(19, 6, 28, 0.6)',
+    paddingHorizontal: 14,
+    height: 50,
   },
   inputIcon: {
-    marginRight: 8,
+    marginRight: 10,
   },
   currencyPrefix: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#0F172A',
+    fontSize: 20,
+    fontWeight: '900',
+    color: THEME.marigold.bright,
     marginRight: 8,
   },
   textInput: {
     flex: 1,
     fontSize: 15,
-    color: '#0F172A',
+    color: THEME.iceSilver.pure,
   },
   amountInput: {
-    fontWeight: '700',
-    fontSize: 17,
+    fontWeight: '900',
+    fontSize: 18,
+    color: THEME.marigold.bright,
   },
   presetRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 8,
+    gap: 8,
+    marginTop: 10,
   },
   presetChip: {
-    backgroundColor: '#F1F5F9',
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 8,
+    backgroundColor: 'rgba(226, 232, 240, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(226, 232, 240, 0.18)',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   presetChipActive: {
-    backgroundColor: '#0F172A',
+    backgroundColor: THEME.marigold.bright,
+    borderColor: THEME.marigold.bright,
   },
   presetChipPast: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+    borderColor: THEME.marigold.bright,
   },
   presetText: {
     fontSize: 11,
-    fontWeight: '600',
-    color: '#475569',
-  },
-  presetTextActive: {
-    color: '#FFFFFF',
-  },
-  presetTextPast: {
-    color: '#DC2626',
+    fontWeight: '700',
+    color: THEME.iceSilver.pure,
   },
   photoActionsRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 12,
   },
   photoPickerBtn: {
     flex: 1,
@@ -447,25 +454,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#F0F9FF',
+    backgroundColor: 'rgba(245, 158, 11, 0.12)',
     borderWidth: 1.5,
-    borderColor: '#BAE6FD',
+    borderColor: 'rgba(245, 158, 11, 0.35)',
     borderStyle: 'dashed',
-    borderRadius: 12,
-    height: 48,
+    borderRadius: 14,
+    height: 50,
   },
   photoPickerText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#0284C7',
+    fontWeight: '700',
+    color: THEME.marigold.bright,
   },
   imagePreviewContainer: {
     position: 'relative',
     height: 120,
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: 'rgba(226, 232, 240, 0.25)',
   },
   previewImage: {
     width: '100%',
@@ -476,7 +483,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: '#DC2626',
+    backgroundColor: THEME.overdue.main,
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -484,21 +491,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   submitButton: {
-    backgroundColor: '#0F172A',
+    backgroundColor: THEME.marigold.bright,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    height: 52,
-    borderRadius: 14,
-    marginTop: 10,
+    height: 54,
+    borderRadius: 16,
+    marginTop: 12,
+    shadowColor: THEME.marigold.bright,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    elevation: 8,
   },
   submitButtonDisabled: {
     opacity: 0.6,
   },
   submitButtonText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontWeight: '900',
+    color: THEME.aubergine.darkest,
+    letterSpacing: 0.3,
   },
 });

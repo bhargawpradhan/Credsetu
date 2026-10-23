@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { LoanFilterStatus, LoanSummary } from '../types';
+import { THEME } from '../theme/colors';
 
 interface StatusFilterTabsProps {
   selectedStatus: LoanFilterStatus;
@@ -42,7 +43,7 @@ export const StatusFilterTabs: React.FC<StatusFilterTabsProps> = ({
                 isOverdueTab && !isSelected && styles.overdueTabInactive,
                 isOverdueTab && isSelected && styles.overdueTabSelected,
               ]}
-              activeOpacity={0.7}
+              activeOpacity={0.75}
             >
               <Text
                 style={[
@@ -53,6 +54,7 @@ export const StatusFilterTabs: React.FC<StatusFilterTabsProps> = ({
               >
                 {tab.label}
               </Text>
+
               {tab.count !== undefined && (
                 <View
                   style={[
@@ -83,7 +85,7 @@ export const StatusFilterTabs: React.FC<StatusFilterTabsProps> = ({
 const styles = StyleSheet.create({
   container: {
     marginHorizontal: 16,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   scroll: {
     flexDirection: 'row',
@@ -92,60 +94,72 @@ const styles = StyleSheet.create({
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    backgroundColor: '#F1F5F9',
-    gap: 6,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    backgroundColor: 'rgba(30, 11, 43, 0.45)', // Transparent frosted Deep Aubergine
+    borderWidth: 1.5,
+    borderColor: 'rgba(226, 232, 240, 0.15)',
+    gap: 8,
   },
   tabSelected: {
-    backgroundColor: '#0F172A',
+    backgroundColor: 'rgba(245, 158, 11, 0.22)',
+    borderColor: THEME.marigold.bright,
+    shadowColor: THEME.marigold.main,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
   },
   overdueTabInactive: {
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#FECACA',
+    backgroundColor: 'rgba(239, 68, 68, 0.12)',
+    borderColor: 'rgba(239, 68, 68, 0.4)',
   },
   overdueTabSelected: {
-    backgroundColor: '#DC2626',
+    backgroundColor: 'rgba(239, 68, 68, 0.35)',
+    borderColor: THEME.overdue.bright,
+    shadowColor: THEME.overdue.main,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
   },
   tabText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#64748B',
+    fontWeight: '700',
+    color: THEME.iceSilver.metallic,
+    letterSpacing: 0.3,
   },
   tabTextSelected: {
-    color: '#FFFFFF',
+    color: THEME.marigold.bright,
   },
   overdueTextInactive: {
-    color: '#DC2626',
+    color: THEME.overdue.bright,
   },
   badge: {
-    paddingHorizontal: 6,
+    paddingHorizontal: 7,
     paddingVertical: 2,
     borderRadius: 10,
-    minWidth: 18,
+    minWidth: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   badgeInactive: {
-    backgroundColor: '#E2E8F0',
+    backgroundColor: 'rgba(226, 232, 240, 0.12)',
   },
   badgeSelected: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    backgroundColor: THEME.marigold.bright,
   },
   badgeOverdue: {
-    backgroundColor: '#EF4444',
+    backgroundColor: THEME.overdue.main,
   },
   badgeText: {
     fontSize: 11,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   badgeTextInactive: {
-    color: '#475569',
+    color: THEME.iceSilver.muted,
   },
   badgeTextSelected: {
-    color: '#FFFFFF',
+    color: THEME.aubergine.darkest,
   },
   badgeTextOverdue: {
     color: '#FFFFFF',
