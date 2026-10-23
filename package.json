@@ -1,0 +1,17 @@
+{
+  "name": "miniledger",
+  "version": "1.0.0",
+  "description": "MiniLedger - Track money lent to friends (Full Stack React Native + Node.js + TypeScript + PostgreSQL)",
+  "scripts": {
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:mobile": "npm --prefix mobile run web",
+    "mobile:android": "npm --prefix mobile run android",
+    "mobile:ios": "npm --prefix mobile run ios",
+    "test:backend": "npm --prefix backend run test",
+    "build:backend": "npm --prefix backend run build",
+    "build:mobile": "npm --prefix mobile run web"
+  },
+  "keywords": ["miniledger", "fintech", "react-native", "expo", "postgresql", "typescript", "express"],
+  "author": "",
+  "license": "MIT"
+}
