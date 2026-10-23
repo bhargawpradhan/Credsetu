@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { config } from './config/env';
 import authRoutes from './routes/auth.routes';
 import loanRoutes from './routes/loan.routes';
@@ -31,7 +32,19 @@ export function createApp() {
   app.use('/api/loans', loanRoutes);
   app.use('/api/summary', summaryRoutes);
 
-  // 404 Handler
+  // Serve compiled React Native Web App if available
+  const mobileDistDir = path.resolve(__dirname, '../../mobile/dist');
+  if (fs.existsSync(mobileDistDir)) {
+    app.use(express.static(mobileDistDir));
+    app.get('*', (req: Request, res: Response, next: NextFunction) => {
+      if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+        return next();
+      }
+      res.sendFile(path.join(mobileDistDir, 'index.html'));
+    });
+  }
+
+  // 404 Handler for unhandled API routes
   app.use((_req: Request, res: Response) => {
     res.status(404).json({
       success: false,
